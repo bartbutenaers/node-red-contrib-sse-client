@@ -55,14 +55,16 @@ module.exports = function(RED) {
         }
         
         function handleMsg(msg) {
-            // To pause the streaming, just remove all listeners (if a client is configured yet)
-            if (msg.pause === true) {
-                // When a previous timer is available, stop it (since a timeout is useless for a paused stream)
-                if (node.timerId) {
+            // When a stream is paused or stopped, stop the active timeout timer (since no events will be received anyway)
+            if (msg.pause === true || msg.stop === true) {
+                 if (node.timerId) {
                     clearTimeout(node.timerId);
                     node.timerId = null;
                 }
+            }
             
+            // To pause the streaming, just remove all listeners (if a client is configured yet)
+            if (msg.pause === true) {
                 if (node.client) {
                     for (var i in node.events) {
                         node.client.removeEventListener(node.events[i], handleEvent);
@@ -75,18 +77,25 @@ module.exports = function(RED) {
                 return;
             }
             
-            // It has no use to create a client, when no URL has been specified
-            if (!node.url) {
-                node.status({fill: "red", shape: "dot", text: "no url"});
+            // To stop the streaming, close the client
+            if (msg.stop === true) {
+                node.status({fill: 'red', shape: 'ring', text: 'disconnected'});
+                if (node.client) {
+                    node.client.close();
+                }
+                node.client = null;
                 return;
             }
             
             // When the previous client is NOT paused, we will stop it and create a new one (to send a new http GET).
+            // When the client is paused, the listeners will again be re-applied below...
             if (node.client && !node.paused) {
                 node.status({fill: 'red', shape: 'ring', text: 'disconnected'});
                 node.client.close();
                 node.client = null;
             }
+            
+            // When we arrive here, a new stream should be started or a paused stream should be restarted
             
             // When the previous client is paused, then resume it again (we will add the listeners back again further on ...).
             if (node.client && node.paused) {
@@ -113,6 +122,12 @@ module.exports = function(RED) {
                 
                 if (node.proxyUrl) {
                     headerDictionary.proxy = node.proxyUrl;
+                }
+                
+                // It has no use to create a client, when no URL has been specified
+                if (!node.url) {
+                    node.status({fill: "red", shape: "dot", text: "no url"});
+                    return;
                 }
                     
                 // Start a new stream (i.e. send a new http get)
