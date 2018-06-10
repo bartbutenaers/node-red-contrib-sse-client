@@ -1,0 +1,26 @@
+{
+    "name"         : "node-red-contrib-sse-client",
+    "version"      : "0.0.1",
+    "description"  : "A Node Red node to receive Server Sent events",
+    "dependencies": {
+       "eventsource": "1.0.5"
+    },
+    "author": {
+        "name": "Bart Butenaers"
+    },
+    "license": "Apache-2.0",
+    "keywords": [ "node-red", "sse", "server", "client", "event", "stream" ],
+    "bugs": {
+        "url": "https://github.com/bartbutenaers/node-red-contrib-sse-client/issues"
+    },
+    "homepage": "https://github.com/bartbutenaers/node-red-contrib-sse-client",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/bartbutenaers/node-red-contrib-sse-client.git"
+    },
+    "node-red"     : {
+        "nodes": {
+            "sse-client": "sse_client.js"
+        }
+    }
+}
