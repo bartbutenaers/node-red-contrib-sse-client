@@ -1,0 +1,206 @@
+<!--
+  Copyright 2018, Bart Butenaers
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<script type="text/x-red" data-template-name="sse-client">
+    <div class="form-row">
+        <label for="node-input-url"><i class="fa fa-globe"></i> Url</label>
+        <input type="text" id="node-input-url" placeholder="Enter URL" />
+    </div>
+    <div class="form-row" style="margin-bottom:0;">
+        <label><i class="fa fa-list"></i> Events</label>
+    </div>
+    <div class="form-row node-input-events-container-row">
+        <ol id="node-input-events-container"></ol>
+    </div>
+    </br>
+    <div class="form-row" style="margin-bottom:0;">
+        <label><i class="fa fa-list"></i> Http headers</label>
+    </div>
+    <div class="form-row node-input-headers-container-row">
+        <ol id="node-input-headers-container"></ol>
+    </div>
+    <div class="form-row">
+        <label for="node-input-proxy"><i class="fa fa-tencent-weibo"></i> Proxy</label>
+        <input type="text" id="node-input-proxy" placeholder="Enter proxy URL" />
+    </div>
+    <div class='form-row'>
+        <input type='checkbox' id='node-input-restart' style='display: inline-block; width: auto; vertical-align: top;'>
+        <label for='node-input-restart' style='width: 70%;'>Restart connection after timeout</label>
+    </div>
+    <div class="form-row" id="timeout-div">
+        <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
+        <input type="text" id="node-input-timeout">
+    </div>
+    <br>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('sse-client', {
+        category: 'input',
+        color:    'rgb(231, 231, 174)',
+        defaults: {
+            name: {value: ""},
+            url: {value:"", required:true},
+            events: {value: ["message"], required:true},
+            partHeaders: {value:{}},
+            proxy: {value:"",required:false},
+            restart: {value: false},
+            timeout: {value: 1}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "arrows.png",
+        label: function() {
+            return this.name || "SSE client";
+        },
+        oneditprepare: function() {
+            function resizeRule(rule) {
+                var newWidth = rule.width();
+                rule.find('.red-ui-typedInput').typedInput("width",(newWidth-30)/2);
+            }
+            
+            var eventList = $("#node-input-events-container").css('min-height','150px').css('min-width','450px').editableList({
+                addItem: function(container,i,event) {
+                    // Add a new row to the html table
+                    var row = $('<div/>').appendTo(container);
+                    
+                    // Add a text field to the new row, that represents the event name (type string)
+                    var eventName = $('<input/>',{class:"node-input-event-name",type:"text"})
+                        .appendTo(row)
+                        .typedInput({default:'str',types:['str']});
+                        
+                    // Display the specified event name (from the node) in the respective text field
+                    eventName.typedInput('value',event.name);
+                    resizeRule(container);
+                },
+                resizeItem: resizeRule,
+                removable: true
+            });
+            
+            // Show all the events from the node in the html table
+            if (this.events) {
+                for (var i = 0; i < this.events.length; i++) {
+                    eventList.editableList('addItem',{name:this.events[i]});
+                }
+            }
+            
+            var headerList = $("#node-input-headers-container").css('min-height','150px').css('min-width','450px').editableList({
+                addItem: function(container,i,header) {
+                    // Add a new row to the html table
+                    var row = $('<div/>').appendTo(container);
+                    
+                    // Add a text field to the new row, that represents the header name (type string)
+                    var propertyName = $('<input/>',{class:"node-input-header-name",type:"text"})
+                        .appendTo(row)
+                        .typedInput({default:'str',types:['str']});
+                        
+                    // Add a text field to the new row, that represents the header value (type string)
+                    var propertyValue = $('<input/>',{class:"node-input-header-value",type:"text",style:"margin-left: 10px"})
+                        .appendTo(row)
+                        .typedInput({default:'str',types:['str']});
+                    // Display the specified header name and value (from the node) in the respective text fields
+                    propertyName.typedInput('value',header.name);
+                    propertyValue.typedInput('value',header.value);
+                    resizeRule(container);
+                },
+                resizeItem: resizeRule,
+                removable: true
+            });
+            
+            // Show all the headers from the node in the html table
+            if (this.headers) {
+                for (var headerName in this.headers) {
+                    if (this.headers.hasOwnProperty(headerName)) {
+                        var headerValue = this.headers[headerName];
+                        headerList.editableList('addItem',{name:headerName,value:headerValue});
+                    }
+                }
+            }
+            
+            // Show the timeout field only when the 'restart' checkbox is checked
+            $("#timeout-div").hide();
+            $("#node-input-restart").change(function() {
+                if(this.checked) {
+                    $("#timeout-div").show();
+                }
+                else {
+                    $("#timeout-div").hide();
+                }
+            });
+        },
+        oneditsave: function() {
+            var node = this;
+            node.headers = {};
+            node.events = [];
+            
+            // Copy all the header name/value pairs from the html table to the node
+            var headerList = $("#node-input-headers-container").editableList('items');
+            headerList.each(function(i) {
+                var header = $(this);
+                var headerName  = header.find(".node-input-header-name").typedInput('value');
+                var headerValue = header.find(".node-input-header-value").typedInput('value');
+                if (headerName !== '') {
+                    node.headers[headerName] = headerValue;
+                }
+            });
+            
+            // Copy all the event names from the html table to the node
+            var eventList = $("#node-input-events-container").editableList('items');
+            eventList.each(function(i) {
+                var event = $(this);
+                var eventName  = event.find(".node-input-event-name").typedInput('value');
+                if (eventName !== '') {
+                    node.events.push(eventName);
+                }
+            });
+        },
+        oneditresize: function(size) {
+            // Resize headers list
+            var rows = $("#dialog-form>div:not(.node-input-headers-container-row)");
+            var height = size.height;
+            for (var i=0; i<rows.size(); i++) {
+                height -= $(rows[i]).outerHeight(true);
+            }
+            var editorRow = $("#dialog-form>div.node-input-headers-container-row");
+            height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
+            $("#node-input-headers-container").editableList('height',height);
+            
+            // Resize events list
+            rows = $("#dialog-form>div:not(.node-input-events-container-row)");
+            height = size.height;
+            for (var i=0; i<rows.size(); i++) {
+                height -= $(rows[i]).outerHeight(true);
+            }
+            editorRow = $("#dialog-form>div.node-input-events-container-row");
+            height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
+            $("#node-input-events-container").editableList('height',height);
+        }
+    });
+</script>
+
+<script type="text/x-red" data-help-name="sse-client">
+    <p>Node-Red node to receive SSE events from a server.</p>
+    <p><strong>Url:</strong><br/>
+    The URL of the event source, i.e. the server that sends SSE events to this client.</p>
+    <p><strong>Events:</strong><br/>
+    The list of all SSE events that we want to receive.  Specify at least 1 event.</p>
+    <p><strong>Http headers:</strong><br/>
+    The (optional) list of all http headers that should be send in the initial http request to the server.</p>
+    <p><strong>Proxy:</strong><br/>
+    The (optional) proxy url, in case the client is located behind a corporate firewall.</p>
+    <p><strong>Restart connection after timeout:</strong><br/>
+    When this checkbox is selected, the SSE client will be restarted after a timeout (i.e. when no messages have been received the last X seconds.</p>
+</script>
