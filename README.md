@@ -12,9 +12,9 @@ Server-Sent Events allow a client (e.g. a web page in a browser) to get *automat
 
 ![Communication](https://raw.githubusercontent.com/bartbutenaers/node-red-contrib-sse-client/master/images/sse_communication.png)
 
-This SSE client node sends a single http request to the SSE server, and subscribes for one or more ***events*** at the server.  As soon as one of those events occur at the SSE server, the server will send the data of the event to this client.  This way data streaming is accomplished...
+This SSE client node sends a single http request to the SSE server, and subscribes for all ***events*** at the server.  As soon as an event occurs at the SSE server, the server will send the data of the event to this client.  This way data streaming is accomplished...
 
-The example flow below is based on this [demo SSE stream](https://proxy.streamdata.io/http://stockmarket.streamdata.io/prices/).  By opening the stream with a browser (e.g. Chrome), the content of the stream will be displayed:
+The example flow below is based on this [demo SSE stream](https://proxy.streamdata.io/http://stockmarket.streamdata.io/prices/).  By opening the stream with a browser (e.g. Chrome), the content of the stream can be displayed:
 
 ```
 id:2c6e7f72-3c15-4f6d-b2dc-927611d60a28
@@ -30,7 +30,7 @@ event:patch
 data:[{"op":"replace","path":"/0/price","value":67},{"op":"replace","path":"/1/price","value":89},{"op":"replace","path":"/2/price","value":45},{"op":"replace","path":"/3/price","value":64},{"op":"replace","path":"/5/price","value":19},{"op":"replace","path":"/8/price","value":68}]
 ```
 
-In this example stream, the available events are *'data'* and *'patch'*.  Those event names need to be specified in the node's config screen, to be able to receive them.  
+In most cases the server will not specify an event type, which means the client will assign the default event type *'message'*.  However in this example stream, the sever sends two different event types *'data'* and *'patch'*. 
 
 P.S. If you are wondering whether your data stream is an SSE stream (or perhaps some other streaming type), have a look at the **'content-type'** of the http response.  In case of SSE streaming, the content-type should contain **'event-stream'**.  For example in Chrome this can be visualised in the Developer Tools (Network tab):
 
@@ -42,13 +42,14 @@ The following example flow explains how this node works:
 ![Flow](https://raw.githubusercontent.com/bartbutenaers/node-red-contrib-sse-client/master/images/sse_flow.png)
 
 ```
-[{"id":"4b3e05d.624d1fc","type":"inject","z":"279b8956.27dfe6","name":"Start stream","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":290,"y":420,"wires":[["54856b75.8323f4"]]},{"id":"90998fcb.a12cf","type":"inject","z":"279b8956.27dfe6","name":"Pause stream","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":290,"y":500,"wires":[["cc7381a4.13aae"]]},{"id":"5dea869b.8d96f8","type":"debug","z":"279b8956.27dfe6","name":"Display event","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","x":879,"y":420,"wires":[]},{"id":"cc7381a4.13aae","type":"change","z":"279b8956.27dfe6","name":"","rules":[{"t":"set","p":"pause","pt":"msg","to":"true","tot":"bool"}],"action":"","property":"","from":"","to":"","reg":false,"x":480,"y":500,"wires":[["54856b75.8323f4"]]},{"id":"d7047f19.d9e27","type":"inject","z":"279b8956.27dfe6","name":"Stop stream","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":290,"y":460,"wires":[["ece32c55.042c6"]]},{"id":"ece32c55.042c6","type":"change","z":"279b8956.27dfe6","name":"","rules":[{"t":"set","p":"stop","pt":"msg","to":"true","tot":"bool"}],"action":"","property":"","from":"","to":"","reg":false,"x":470,"y":460,"wires":[["54856b75.8323f4"]]},{"id":"54856b75.8323f4","type":"sse-client","z":"279b8956.27dfe6","name":"","url":"https://proxy.streamdata.io/http://stockmarket.streamdata.io/prices/","events":["patch"],"partHeaders":{},"proxy":"","restart":false,"timeout":1,"x":670,"y":420,"wires":[["5dea869b.8d96f8"]]}]
+[{"id":"e6525d94.efe75","type":"inject","z":"38087f78.ef0ed","name":"Start / Restart / Unpause stream","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":410,"y":160,"wires":[["a0c71898.0d5518"]]},{"id":"68030199.690b9","type":"inject","z":"38087f78.ef0ed","name":"Pause stream","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":350,"y":240,"wires":[["b22dce60.73d65"]]},{"id":"ecdd1cdd.bf2cd","type":"debug","z":"38087f78.ef0ed","name":"Display event","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","x":980,"y":160,"wires":[]},{"id":"b22dce60.73d65","type":"change","z":"38087f78.ef0ed","name":"","rules":[{"t":"set","p":"pause","pt":"msg","to":"true","tot":"bool"}],"action":"","property":"","from":"","to":"","reg":false,"x":580,"y":240,"wires":[["a0c71898.0d5518"]]},{"id":"36d0c3e2.58ec3c","type":"inject","z":"38087f78.ef0ed","name":"Stop stream","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":350,"y":200,"wires":[["681826ce.fcb0f8"]]},{"id":"681826ce.fcb0f8","type":"change","z":"38087f78.ef0ed","name":"","rules":[{"t":"set","p":"stop","pt":"msg","to":"true","tot":"bool"}],"action":"","property":"","from":"","to":"","reg":false,"x":590,"y":200,"wires":[["a0c71898.0d5518"]]},{"id":"a0c71898.0d5518","type":"sse-client","z":"38087f78.ef0ed","name":"","url":"https://proxy.streamdata.io/http://stockmarket.streamdata.io/prices/","events":["patch"],"partHeaders":{},"proxy":"","restart":true,"timeout":"10","x":790,"y":160,"wires":[["ecdd1cdd.bf2cd"]]}]
+
 ```
 
 The node will be controlled by the input messages it receives:
-+ **Start** the stream by sending a message to the node.  The node will send a http request to the server, to subscribe for the specified events.
-+ **Stop** the stream by sending a message with `msg.stop = true` to the node.  The connection to the server will be disconnected entirely.  Start the stream again afterwards by sending a new input message, to reconnect again to the server.
-+ **Pause** the stream by sending a message with `msg.pause = true` to the node.  The connection to the server will stay open, but the server will be informed that this client doesn't want to receive the specified events anymore.  Resume the stream again afterwards by sending a new input message, so the server will be informed that this client wants to receive the specified events again.
++ **Start** the stream by sending a message to the node.  The node will send a http request to the server, to subscribe for all event types.
++ **Stop** the stream by sending a message with `msg.stop = true` to the node.  The connection to the server will be disconnected entirely, and no events will be streamed anymore to our client node.  Start the stream again afterwards by sending a new input message, to reconnect again to the server.
++ **Pause** the stream by sending a message with `msg.pause = true` to the node.  The connection to the server will stay open, and the *events will keep coming* from the server!  However the client will skip all those events, as long as the client is paused.  Resume the stream again afterwards by sending a new (arbitrary) input message, so the client will stop ignoring events from the server.
 
 When controlling this node, the node will be in one of the following statusses:
 
@@ -60,7 +61,14 @@ When controlling this node, the node will be in one of the following statusses:
 This URL refers to the resource (e.g. php file) on the SSE server, which will be able to respond by pushing SSE events to this client.
 
 ### Events
-Specify a list of events that needs to be received, i.e. to which this client wants to subscribe.  At least one event name should be specified.  By default the 'message' event is added, but this will vary from stream to stream!  
+Specify a list of event types that needs to be received.  When no events types are specified, this means that *ALL* events will be handled.  When you don't know which event types are being streamed from the server, then following ***way of working*** is advised:
+1. Start by specifying no event types in the node's config screen.
+2. Now ALL event types will be received from the server.
+
+    ![Debug](https://raw.githubusercontent.com/bartbutenaers/node-red-contrib-sse-client/master/images/sse_debug.png)
+
+3. Determine which event types are interesting for your purpose.
+4. Specify those event types (that you want to keep receiving) in the node's config screen.
 
 When an incorrect event name will be specified, ***no events*** will be received in the Node-Red flow (without having an error)!
 
