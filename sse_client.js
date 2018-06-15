@@ -14,13 +14,13 @@
  * limitations under the License.
  **/
 module.exports = function(RED) {
-	var EventSource = require('eventsource');
+	var EventSource = require('./lib/eventsource');
 
 	function SseClientNode(config) {
 		RED.nodes.createNode(this, config);
         this.headers  = config.headers || {};
 		this.url      = config.url;
-		this.events   = config.events || ["message"];
+		this.events   = config.events || [];
         this.proxy    = config.proxy;
         this.restart  = config.restart;
         this.timeout  = config.timeout;
@@ -33,6 +33,21 @@ module.exports = function(RED) {
 		node.status({fill: 'red', shape: 'ring', text: 'disconnected'});
         
         function handleEvent(e) {
+            // Skip all events when this node is paused
+            if (node.paused) {
+                return;
+            }
+            
+            // Skip the 'open' event
+            if (e.type === 'open') {
+                return;
+            }
+            
+            // When events have been specified, only allow those events
+            if (node.events.length > 0 && !node.events.includes(e.type)) {
+                return;
+            }
+                    
             // When a previous timer is available, stop it
             if (node.timerId) {
                 clearTimeout(node.timerId);
@@ -63,14 +78,8 @@ module.exports = function(RED) {
                 }
             }
             
-            // To pause the streaming, just remove all listeners (if a client is configured yet)
+            // Check whether the stream should be paused
             if (msg.pause === true) {
-                if (node.client) {
-                    for (var i in node.events) {
-                        node.client.removeEventListener(node.events[i], handleEvent);
-                    }
-                }
-                
                 node.status({fill: 'yellow', shape: 'ring', text: 'paused'});
                 node.paused = true;
                 
@@ -88,7 +97,6 @@ module.exports = function(RED) {
             }
             
             // When the previous client is NOT paused, we will stop it and create a new one (to send a new http GET).
-            // When the client is paused, the listeners will again be re-applied below...
             if (node.client && !node.paused) {
                 node.status({fill: 'red', shape: 'ring', text: 'disconnected'});
                 node.client.close();
@@ -97,7 +105,7 @@ module.exports = function(RED) {
             
             // When we arrive here, a new stream should be started or a paused stream should be restarted
             
-            // When the previous client is paused, then resume it again (we will add the listeners back again further on ...).
+            // When the previous client is paused, then resume it again
             if (node.client && node.paused) {
                 node.status({fill: "green", shape: "dot", text: "connected"});
                 node.paused = false; 
@@ -142,11 +150,10 @@ module.exports = function(RED) {
                 }
             }
             
-            // Add the listeners, and start listening for events.
-            // The listeners can be added for the first time on a new client, or can be re-added to an existing client (after a pause)
-            for (var i in node.events) {
-                node.client.addEventListener(node.events[i], handleEvent);
-            }
+            // Handle ALL events.
+            node.client.onAnyMessage = function(eventType, event) {
+                handleEvent(event);
+            };
         }
         
         node.on("input", function(msg) {   
