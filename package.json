@@ -3,7 +3,7 @@
     "version"      : "0.0.1",
     "description"  : "A Node Red node to receive Server Sent events",
     "dependencies": {
-       "eventsource": "1.0.5"
+       "original": "^1.0.0"
     },
     "author": {
         "name": "Bart Butenaers"
