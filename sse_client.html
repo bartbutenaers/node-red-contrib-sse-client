@@ -12,8 +12,8 @@
 -->
 <script type="text/x-red" data-template-name="sse-client">
     <div class="form-row">
-        <label for="node-input-url"><i class="fa fa-globe"></i> Url</label>
-        <input type="text" id="node-input-url" placeholder="Enter URL" />
+        <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+        <input type="text" id="node-input-url" placeholder="http://" />
     </div>
     <div class="form-row" style="margin-bottom:0;">
         <label><i class="fa fa-list"></i> Events</label>
@@ -53,7 +53,7 @@
         color:    'rgb(231, 231, 174)',
         defaults: {
             name: {value: ""},
-            url: {value:"", required:true},
+            url: {value:"", required:true, validate:function(v) { return (v.trim().length === 0) || (v.indexOf("://") === -1) || (v.trim().indexOf("http") === 0)} },
             events: {value: ["message"], required:true},
             partHeaders: {value:{}},
             proxy: {value:"",required:false},
