@@ -13,7 +13,7 @@
 <script type="text/x-red" data-template-name="sse-client">
     <div class="form-row">
         <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
-        <input type="text" id="node-input-url" placeholder="http://" />
+        <input type="text" id="node-input-url" placeholder="URL e.g. http://your.server.com" />
     </div>
     <div class="form-row" style="margin-bottom:0;">
         <label><i class="fa fa-list"></i> Events</label>
@@ -54,7 +54,7 @@
         defaults: {
             name: {value: ""},
             url: {value:"", required:true, validate:function(v) { return (v.trim().length === 0) || (v.indexOf("://") === -1) || (v.trim().indexOf("http") === 0)} },
-            events: {value: ["message"], required:true},
+            events: {value: [], required:true},
             partHeaders: {value:{}},
             proxy: {value:"",required:false},
             restart: {value: false},
@@ -78,7 +78,7 @@
                     var row = $('<div/>').appendTo(container);
                     
                     // Add a text field to the new row, that represents the event name (type string)
-                    var eventName = $('<input/>',{class:"node-input-event-name",type:"text"})
+                    var eventName = $('<input/>',{class:"node-input-event-name",type:"text",placeholder:"Event name"})
                         .appendTo(row)
                         .typedInput({default:'str',types:['str']});
                         
@@ -103,12 +103,12 @@
                     var row = $('<div/>').appendTo(container);
                     
                     // Add a text field to the new row, that represents the header name (type string)
-                    var propertyName = $('<input/>',{class:"node-input-header-name",type:"text"})
+                    var propertyName = $('<input/>',{class:"node-input-header-name",type:"text",placeholder:"Header name"})
                         .appendTo(row)
                         .typedInput({default:'str',types:['str']});
                         
                     // Add a text field to the new row, that represents the header value (type string)
-                    var propertyValue = $('<input/>',{class:"node-input-header-value",type:"text",style:"margin-left: 10px"})
+                    var propertyValue = $('<input/>',{class:"node-input-header-value",type:"text",style:"margin-left: 10px",placeholder:"Header value"})
                         .appendTo(row)
                         .typedInput({default:'str',types:['str']});
                     // Display the specified header name and value (from the node) in the respective text fields
