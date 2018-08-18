@@ -53,7 +53,7 @@
         color:    'rgb(231, 231, 174)',
         defaults: {
             name: {value: ""},
-            url: {value:"", required:true, validate:function(v) { return (v.trim().length === 0) || (v.indexOf("://") === -1) || (v.trim().indexOf("http") === 0)} },
+            url: {value:"", required:false, validate:function(v) { return (v.trim().length === 0) || (v.indexOf("://") === -1) || (v.trim().indexOf("http") === 0)} },
             events: {value: [], required:true},
             partHeaders: {value:{}},
             proxy: {value:"",required:false},

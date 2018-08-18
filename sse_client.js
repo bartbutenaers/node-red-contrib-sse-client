@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+function isEmpty(obj) {
+    return Object.keys(obj).length === 0 && obj.constructor === Object
+};
+
 module.exports = function(RED) {
 	var EventSource = require('./lib/eventsource');
 
@@ -122,31 +127,45 @@ module.exports = function(RED) {
             // When no client is available, just create one (and connect to the server) ...  
             if (!node.client) {
                 // All EventSource parameter should be passed to the constructor as a dictionary
-                var headerDictionary = {};
-                
-                if (node.headers) {
-                    headerDictionary.headers = node.headers;
+                var options = {};
+                var url = '';
+
+                // Allow override of headers
+                if (msg.headers && isEmpty(node.headers)) {
+                    options.headers = msg.headers;
+                } else if (!msg.headers && !isEmpty(node.headers)) {
+                    options.headers = node.headers;
+                } else if (msg.headers && !isEmpty(node.headers)) {
+                    options.headers = node.headers;
+                    node.warn('Warning: msg properties can not override set node properties. Using set node properties.');
                 }
                 
                 if (node.proxyUrl) {
-                    headerDictionary.proxy = node.proxyUrl;
+                    options.proxy = node.proxyUrl;
                 }
                 
-                // It has no use to create a client, when no URL has been specified
-                if (!node.url) {
+                // Allow override of url
+                if (msg.url && !node.url) {
+                    url = msg.url;
+                } else if (!msg.url && node.url) {
+                    url = node.url;
+                } else if (msg.url && node.url) {
+                    url = node.url;
+                    node.warn('Warning: msg properties can not override set node properties. Using set node properties.');
+                } else {
                     node.status({fill: "red", shape: "dot", text: "no url"});
                     return;
                 }
                     
                 // Start a new stream (i.e. send a new http get)
-                node.client = new EventSource(node.url, headerDictionary);
+                node.client = new EventSource(url, options);
 
                 node.client.onopen = function() {
                     node.status({fill: "green", shape: "dot", text: "connected"});
                 }
 
                 node.client.onerror = function(err) {
-                    node.status({fill: "red", shape: "dot", text: "error"});
+                    node.status({fill: "red", shape: "dot", text: `Error: ${err.status}`});
                 }
             }
             
