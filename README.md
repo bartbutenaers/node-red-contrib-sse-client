@@ -73,11 +73,21 @@ When you don't know which event types are being streamed from the server, then f
 ### URL
 This URL refers to the resource (e.g. php file) on the SSE server, which will be able to respond by pushing SSE events to this client.
 
+When the URL is not specified in the config screen, it has to be specified in the `msg.url` field:
+
+![Msg url](https://raw.githubusercontent.com/bartbutenaers/node-red-contrib-sse-client/master/images/sse_msg_url.png)
+
+```
+[{"id":"2c330c1.eb6e0f4","type":"inject","z":"279b8956.27dfe6","name":"Start / Restart / Unpause stream","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":410,"y":1080,"wires":[["ad32da91.caaeb8"]]},{"id":"6edee7f1.0ba3e8","type":"debug","z":"279b8956.27dfe6","name":"Display event","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","x":1080,"y":1080,"wires":[]},{"id":"ad32da91.caaeb8","type":"change","z":"279b8956.27dfe6","name":"","rules":[{"t":"set","p":"url","pt":"msg","to":"https://proxy.streamdata.io/http://stockmarket.streamdata.io/prices/","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":670,"y":1080,"wires":[["81ff519a.095a9"]]},{"id":"81ff519a.095a9","type":"sse-client","z":"279b8956.27dfe6","name":"","url":"","events":["patch"],"partHeaders":{},"proxy":"","restart":true,"timeout":"10","x":870,"y":1080,"wires":[["6edee7f1.0ba3e8"]]}]
+```
+
 ### Events
 Specify a list of event types that needs to be received.  When no events types are specified, this means that *ALL* events will be handled.  When a single incorrect event name is specified, ***no events*** will be received in the Node-Red flow (without having an error)!
 
 ### Http headers
 Optionally http headers can be specified, which will be send to the SSE server in the initial http request.  This can be used for example to send cookies to the server.
+
+When the Http headers are not specified in the config screen, they can be specified in the `msg.headers` field.
 
 ### Proxy
 Optionally a proxy url can be specified, in case a (corporate) firewall is isolating the Node-Red flow from the SSE server.
