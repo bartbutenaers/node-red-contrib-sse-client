@@ -53,7 +53,7 @@
         color:    'rgb(231, 231, 174)',
         defaults: {
             name: {value: ""},
-            url: {value:"", required:true, validate:function(v) { return (v.trim().length === 0) || (v.indexOf("://") === -1) || (v.trim().indexOf("http") === 0)} },
+            url: {value:"", required:false, validate:function(v) { return (v.trim().length === 0) || (v.indexOf("://") === -1) || (v.trim().indexOf("http") === 0)} },
             events: {value: [], required:true},
             partHeaders: {value:{}},
             proxy: {value:"",required:false},
@@ -193,11 +193,11 @@
 
 <script type="text/x-red" data-help-name="sse-client">
     <p>Node-Red node to receive SSE events from a server.</p>
-    <p><strong>Url:</strong><br/>
+    <p><strong>Url (msg.url):</strong><br/>
     The URL of the event source, i.e. the server that sends SSE events to this client.</p>
     <p><strong>Events:</strong><br/>
     The list of all SSE events that we want to receive.  Specify at least 1 event.</p>
-    <p><strong>Http headers:</strong><br/>
+    <p><strong>Http headers (msg.headers):</strong><br/>
     The (optional) list of all http headers that should be send in the initial http request to the server. See <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields" target="_blank">here</a> for a list of possible headers.</p>
     <p><strong>Proxy:</strong><br/>
     The (optional) proxy url, in case the client is located behind a corporate firewall.</p>
