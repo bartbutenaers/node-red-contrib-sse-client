@@ -195,6 +195,10 @@
     <p>Node-Red node to receive SSE events from a server.</p>
     <p><strong>Url (msg.url):</strong><br/>
     The URL of the event source, i.e. the server that sends SSE events to this client.</p>
+    <p>The url can contain <a href="http://mustache.github.io/mustache.5.html" target="_blank">mustache-style</a> tags. These allow the
+    url to be constructed using values of the incoming message. For example, if the url is set to
+    <code>example.com/{{{topic}}}</code>, it will have the value of <code>msg.topic</code> automatically inserted.
+    Using {{{...}}} prevents mustache from escaping characters like / & etc.</p>
     <p><strong>Events:</strong><br/>
     The list of all SSE events that we want to receive.  Specify at least 1 event.</p>
     <p><strong>Http headers (msg.headers):</strong><br/>
