@@ -97,5 +97,18 @@ When this checkbox is selected, a timeout interval (in seconds) can be specified
 
 Remark: this option has no effect if the node is being paused! Indeed when the node is paused, no events will be received anyway ...
 
+## Mustache syntax
+Similar to some other nodes in Node-RED, this node also allows URL's with [Mustache](http://mustache.github.io/mustache.5.html) syntax.  Such a syntax allows the URL to be constructed dynamically, using values of the incoming message. 
+
+For example, if the URL is set to ```example.com/{{{some_field}}}```, then the value of ```msg.some_field``` will automatically be inserted into this placeholder.  So if ```msg.some_field``` contains ```'123456'```, then the URL will become ```example.com/123456```.
+
+![Mustache](https://raw.githubusercontent.com/bartbutenaers/node-red-contrib-sse-client/master/images/sse_mustache.png)
+
+```
+[{"id":"d5d7b8aa.90dd98","type":"inject","z":"7f8aff01.07b4","name":"Start stream","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":470,"y":700,"wires":[["d5c5ce73.3ed39"]]},{"id":"c24eb632.d0aaa8","type":"debug","z":"7f8aff01.07b4","name":"Display event","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","x":1080,"y":700,"wires":[]},{"id":"52bc8189.a4e41","type":"sse-client","z":"7f8aff01.07b4","name":"","url":"example.com/{{{some_field}}}","events":["patch"],"partHeaders":{},"proxy":"","restart":true,"timeout":"10","x":871,"y":700,"wires":[["c24eb632.d0aaa8"]]},{"id":"d5c5ce73.3ed39","type":"change","z":"7f8aff01.07b4","name":"","rules":[{"t":"set","p":"some_field","pt":"msg","to":"\"123456\"","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":670,"y":700,"wires":[["52bc8189.a4e41"]]}]
+```
+
+P.S. Mustache allows double brackets ```{{...}}``` to be used.  However by using triple brackets ```{{{...}}}```, we will prevent Mustache from escaping characters like ```/``` and ```&``` ...
+
 ## Node dependencies (advanced)
 To simplify the usage of this contribution, a user should be able to receive all events.  Indeed this is very handy if the user doesn't know which event types are being send by the SSE server.  However the ***SSE protocol doesn't support listening to all events***!  That is the reason why I couldn't get this functionality implemented in the [EventSource](https://github.com/EventSource/eventsource/issues/103).  So unfortunately I had to create a fork of the EventSource node, and copy it to this project.  When a new version of EventSource is needed for some reason, my fork needs to be updated ...
