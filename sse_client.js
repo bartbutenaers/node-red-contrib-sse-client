@@ -19,13 +19,14 @@ function isEmpty(obj) {
 };
 
 module.exports = function(RED) {
-	var EventSource = require('./lib/eventsource');
+    var EventSource = require('./lib/eventsource');
+    var mustache = require("mustache");
 
-	function SseClientNode(config) {
-		RED.nodes.createNode(this, config);
+    function SseClientNode(config) {
+	RED.nodes.createNode(this, config);
         this.headers  = config.headers || {};
-		this.url      = config.url;
-		this.events   = config.events || [];
+	this.url      = config.url;
+	this.events   = config.events || [];
         this.proxy    = config.proxy;
         this.restart  = config.restart;
         this.timeout  = config.timeout;
@@ -34,8 +35,10 @@ module.exports = function(RED) {
         this.timerId  = null;
         
         var node = this;
+        
+        var isTemplatedUrl = (node.url||"").indexOf("{{") != -1;
 
-		node.status({fill: 'red', shape: 'ring', text: 'disconnected'});
+	node.status({fill: 'red', shape: 'ring', text: 'disconnected'});
         
         function handleEvent(e) {
             // Skip all events when this node is paused
@@ -156,6 +159,10 @@ module.exports = function(RED) {
                     node.status({fill: "red", shape: "dot", text: "no url"});
                     return;
                 }
+                
+                if (isTemplatedUrl) {
+                    url = mustache.render(url, msg);
+                }
                     
                 // Start a new stream (i.e. send a new http get)
                 node.client = new EventSource(url, options);
@@ -180,10 +187,10 @@ module.exports = function(RED) {
             handleMsg(msg);
         });
 
-		node.on("close", function() {
-			node.status({fill: "red", shape: "ring", text: "disconnected"});
-			if (node.client) {
-				node.client.close();
+	node.on("close", function() {
+	    node.status({fill: "red", shape: "ring", text: "disconnected"});
+	    if (node.client) {
+                node.client.close();
             }
             node.paused = false;
             
@@ -191,8 +198,8 @@ module.exports = function(RED) {
                 clearTimeout(node.timerId);
                 node.timerId = null;
             }
-		});
-	}
+	});
+    }
 
-	RED.nodes.registerType("sse-client", SseClientNode);
+    RED.nodes.registerType("sse-client", SseClientNode);
 }
