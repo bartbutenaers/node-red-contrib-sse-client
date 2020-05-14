@@ -36,6 +36,14 @@
         <input type='checkbox' id='node-input-restart' style='display: inline-block; width: auto; vertical-align: top;'>
         <label for='node-input-restart' style='width: 70%;'>Restart connection after timeout</label>
     </div>
+    <div class='form-row'>
+        <input type='checkbox' id='node-input-rejectUnauthorized' style='display: inline-block; width: auto; vertical-align: top;'>
+        <label for='node-input-rejectUnauthorized' style='width: 70%;'>Reject unauthorized https requests</label>
+    </div>
+    <div class='form-row'>
+        <input type='checkbox' id='node-input-withCredentials' style='display: inline-block; width: auto; vertical-align: top;'>
+        <label for='node-input-withCredentials' style='width: 70%;'>Pass cross-domain credentials</label>
+    </div>     
     <div class="form-row" id="timeout-div">
         <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
         <input type="text" id="node-input-timeout">
@@ -58,6 +66,8 @@
             headers: {value:{}},
             proxy: {value:"",required:false},
             restart: {value: false},
+            rejectUnauthorized: {value:true},
+            withCredentials: {value:true},
             timeout: {value: 1}
         },
         inputs: 1,
@@ -67,6 +77,16 @@
             return this.name || "SSE client";
         },
         oneditprepare: function() {
+            var node = this;
+
+            // Migration of old nodes
+            if (node.rejectUnauthorized === undefined) {
+                $("#node-input-rejectUnauthorized").prop( "checked", true );
+            }
+            if (node.withCredentials === undefined) {
+                $("#node-input-withCredentials").prop( "checked", true );
+            }        
+        
             function resizeRule(rule) {
                 var newWidth = rule.width();
                 rule.find('.red-ui-typedInput').typedInput("width",(newWidth-30)/2);
@@ -207,4 +227,8 @@
     The (optional) proxy url, in case the client is located behind a corporate firewall.</p>
     <p><strong>Restart connection after timeout:</strong><br/>
     When this checkbox is selected, the SSE client will be restarted after a timeout (i.e. when no messages have been received the last X seconds.</p>
+    <p><strong>Reject unauthorized https requests:</strong><br/>
+    When this checkbox is selected, the SSE client will reject connections when the server certificate doesn't match the list of supplied CAs (Certificate Authorities).</p>  
+    <p><strong>Pass cross-domain credentials:</strong><br/>
+    When this checkbox is selected, the credentials (cookies, authorization headers or TLS client certificates) will be passed to cross-domain requests.</p>  
 </script>
