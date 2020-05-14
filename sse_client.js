@@ -24,21 +24,31 @@ module.exports = function(RED) {
 
     function SseClientNode(config) {
 	RED.nodes.createNode(this, config);
-        this.headers  = config.headers || {};
-	this.url      = config.url;
-	this.events   = config.events || [];
-        this.proxy    = config.proxy;
-        this.restart  = config.restart;
-        this.timeout  = config.timeout;
-        this.paused   = false;
-        this.prevMsg  = null;
-        this.timerId  = null;
+        this.headers             = config.headers || {};
+        this.url                 = config.url;
+        this.events              = config.events || [];
+        this.proxy               = config.proxy;
+        this.restart             = config.restart;
+        this.timeout             = config.timeout;
+        this.rejectUnauthorized  = config.rejectUnauthorized;
+        this.withCredentials     = config.withCredentials;
+        this.paused              = false;
+        this.prevMsg             = null;
+        this.timerId             = null;
         
         var node = this;
         
+        // Migration of old nodes without the http settings
+        if (node.rejectUnauthorized === undefined) {
+            node.rejectUnauthorized = true;
+        }
+        if (node.withCredentials === undefined) {
+            node.withCredentials = true;
+        }
+        
         var isTemplatedUrl = (node.url||"").indexOf("{{") != -1;
 
-	node.status({fill: 'red', shape: 'ring', text: 'disconnected'});
+        node.status({fill: 'red', shape: 'ring', text: 'disconnected'});
         
         function handleEvent(e) {
             // Skip all events when this node is paused
@@ -147,6 +157,18 @@ module.exports = function(RED) {
                     options.proxy = node.proxyUrl;
                 }
                 
+                options.https = {
+                    rejectUnauthorized: node.rejectUnauthorized,
+                    /*TODO
+                    key: fs.readFileSync(path.join(__dirname, 'client_certs', 'client_key.pem')),
+                    cert: fs.readFileSync(path.join(__dirname, 'client_certs', 'client_cert.crt')),
+                    ca: fs.readFileSync(path.join(__dirname, 'client_certs', 'cacert.crt')),
+                    passphrase: 'test1234$'
+                    */
+                }
+                
+                options.withCredentials = node.withCredentials;
+                
                 // Allow override of url
                 if (msg.url && !node.url) {
                     url = msg.url;
@@ -172,14 +194,14 @@ module.exports = function(RED) {
                 }
 
                 node.client.onerror = function(err) {
-                    node.status({fill: "red", shape: "dot", text: `Error: ${err.status}`});
+                    node.status({fill: "red", shape: "dot", text: `Error: ${err.message}`});
                 }
             }
             
             // Handle ALL events.
             node.client.onAnyMessage = function(eventType, event) {
                 handleEvent(event);
-            };
+            }
         }
         
         node.on("input", function(msg) {   
