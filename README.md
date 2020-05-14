@@ -97,6 +97,23 @@ When this checkbox is selected, a timeout interval (in seconds) can be specified
 
 Remark: this option has no effect if the node is being paused! Indeed when the node is paused, no events will be received anyway ...
 
+### Reject unauthorized https requests
+In case of a https based URL, a secure SSL connection will be setup based on the server certificate that this node will receive.  
+
+![ssl handshake](https://user-images.githubusercontent.com/14224149/81846257-13c8b900-9552-11ea-9178-432a8f4ffcc7.png)
+
+As soon as the server certificate arrives, it will be validated (validity period, hostname and CA certificate chain):
+
+![expired certificate](https://user-images.githubusercontent.com/14224149/81986076-7f388680-9637-11ea-8314-b2deaac2872b.png)
+
+When the validation fails, the connection will automatically be aborted.
+By deselecting this option, the server certificate will not be validated anymore and the connection will be accepted automatically. 
+
+*CAUTION:* don't used this feature for secure information, because malicous services could have been tempering with the certificate to intercept the event stream information!
+
+### Pass cross-domain credentials
+When this checkbox is selected, the credentials (cookies, authorization headers or TLS client certificates) will be passed to cross-domain Access-Control requests.  Then on the server side, the 'Access-Control-Allow-Origin' header can be set to a wildcard '*'.
+
 ## Mustache syntax
 Similar to some other nodes in Node-RED, this node also allows URL's with [Mustache](http://mustache.github.io/mustache.5.html) syntax.  Such a syntax allows the URL to be constructed dynamically, using values of the incoming message. 
 
