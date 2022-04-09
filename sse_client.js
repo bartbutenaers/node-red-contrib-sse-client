@@ -78,7 +78,7 @@ module.exports = function (RED) {
             });
         }
 
-        // 08/04/2022 Supergiovane: Function to that starts the timeout timer.
+        // 08/04/2022 Supergiovane: Function to start the timeout timer.
         function startTimeoutTimer() {
             // When a previous timer is available, stop it
             if (node.timerId !== null) clearTimeout(node.timerId);
