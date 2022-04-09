@@ -84,7 +84,7 @@ module.exports = function (RED) {
             if (node.timerId !== null) clearTimeout(node.timerId);
             node.timerId = setTimeout(function restartClient() {
                 // Restart the SSE client by resending the last message again
-                node.status({ fill: "yellow", shape: "dot", text: "Timeout. Restarting." });
+                node.status({ fill: "yellow", shape: "dot", text: "timeout => restarting" });
                 if (node.prevMsg === null) node.prevMsg = { payload: true };
                 handleMsg(node.prevMsg);
                 //node.send({ payload: "Reconnecting..." });
