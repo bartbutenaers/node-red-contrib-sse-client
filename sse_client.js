@@ -200,6 +200,7 @@ module.exports = function (RED) {
 
                 node.client.onerror = function (err) {
                     node.status({ fill: "red", shape: "dot", text: `Error: ${err.message}` });
+                    node.error(err.message, msg)
                 }
             }
 
